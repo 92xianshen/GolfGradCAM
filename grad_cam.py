@@ -67,7 +67,7 @@ def interpolate(x, y, xnew):
     ynew = f(xnew)
     return ynew
 
-def grad_cam(input_model, swing, category_index, layer_name):
+def grad_cam(input_model, swings, category_index, layer_name):
     modified_outputs = [input_model.get_layer(layer_name).output, input_model.output]
     modified_model = tf.keras.Model(inputs=input_model.input, outputs=modified_outputs)
 
@@ -77,7 +77,7 @@ def grad_cam(input_model, swing, category_index, layer_name):
     model = tf.keras.Model(inputs=inp, outputs=[outputs, conv_outputs])
 
     with tf.GradientTape() as tape:
-        out, conv_out = model(swing, training=False)
+        out, conv_out = model(swings, training=False)
         loss = tf.reduce_sum(out)
 
     grads = tape.gradient(loss, conv_out)
@@ -97,48 +97,18 @@ def grad_cam(input_model, swing, category_index, layer_name):
 
     return cam, heatmap
 
-def saliency_function(swing, model, activation_layer):
+def saliency_function(swings, model, activation_layer):
     layer_output = model.get_layer(activation_layer).output
     max_output = tf.reduce_max(layer_output, axis=2)
     model = tf.keras.Model(inputs=model.input, outputs=max_output)
 
-    swing = tf.constant(swing)
+    swings = tf.constant(swings)
     with tf.GradientTape() as tape:
-        tape.watch(swing)
-        out = tf.reduce_sum(model(swing, training=False))
+        tape.watch(swings)
+        out = tf.reduce_sum(model(swings, training=False))
 
-    saliency = tape.gradient(out, swing)
+    saliency = tape.gradient(out, swings)
     return saliency
-
-def show_fn(swing, heatmap, title, fullname):
-    plt.clf()
-    fig, axs = plt.subplots(4, 1)
-    ax_sg, ax_acc, ax_gyro, ax_heatmap = axs.flatten()
-
-    ax_sg.spines['right'].set_visible(False)
-    ax_sg.spines['top'].set_visible(False)
-    ax_sg.plot(swing[:, 0])
-    ax_sg.plot(swing[:, 1])
-    ax_sg.set_title(title)
-
-    ax_acc.spines['right'].set_visible(False)
-    ax_acc.spines['top'].set_visible(False)
-    ax_acc.plot(swing[:, 2])
-    ax_acc.plot(swing[:, 3])
-    ax_acc.plot(swing[:, 4])
-
-    ax_gyro.spines['right'].set_visible(False)
-    ax_gyro.spines['top'].set_visible(False)
-    ax_gyro.plot(swing[:, 5])
-    ax_gyro.plot(swing[:, 6])
-    ax_gyro.plot(swing[:, 7])
-
-    ax_heatmap.spines['right'].set_visible(False)
-    ax_heatmap.spines['top'].set_visible(False)
-    ax_heatmap.plot(heatmap)
-
-    plt.savefig(fullname)
-    plt.close()
 
 x_test = np.load('../dataset/normalized/X_test_norm.npz')['arr_0']
 y_test = np.load('../dataset/normalized/y_test.npz')['arr_0']
@@ -149,21 +119,26 @@ x_test = x_test[..., sample[0]:sample[1], sensor]
 
 # ->> Infer all cases and save as .npz
 for i in range(x_test.shape[0]):
-    x, y = x_test[i][np.newaxis], y_test[i]
-    predictions = model.predict(x)
-    top_1 = predictions[0].argmax()
+    # ->> prediction
+    x, y = x_test[i][np.newaxis], y_test[i] # x: [1, length, sensors], y: scalar
+    predictions = model.predict(x) # predictions: [1, length]
+    top_1 = predictions[0].argmax() # top_1: scalar
     print('Predicted class: {}, Actual class: {}'.format(top_1, y))
 
-    predicted_class = predictions[0].argmax()
+    # ->> Gradient-weighted Class Activation Map
+    predicted_class = predictions[0].argmax() # predictions: scalar
     cam, heatmap = grad_cam(model, x, predicted_class, 'block5_conv4')
 
+    # ->> interpolation for heat line 
     heatmap_length = heatmap.shape[0]
     heatmap_coord = list(range(heatmap_length))
     swing_coord = np.linspace(0, heatmap_length - 1, swing_length)
     heatmap_ext = interpolate(heatmap_coord, heatmap, swing_coord)
 
-    title = 'Predicted class: {}, Actual class: {}'.format(top_1, y)
-    show_fn(x[0], heatmap_ext, title, os.path.join(save_root, '{}.jpg'.format(i)))
+    # ->> Guided Grad-CAM
+    guided_model = modify_backprop(model)
+    saliency = saliency_function(x, guided_model, activation_layer='block5_conv4')
+    guided_gradcam = saliency[0].numpy() * heatmap_ext[..., np.newaxis]
 
     np.savez(
         os.path.join(save_root, '{}.npz'.format(i)), 
@@ -171,4 +146,6 @@ for i in range(x_test.shape[0]):
         actual_class=y, 
         heatmap=heatmap,
         swing=x[0], 
-        heatmap_ext=heatmap_ext)
+        heatmap_ext=heatmap_ext, 
+        guided_gradcam=guided_gradcam, 
+        saliency=saliency[0])

@@ -100,3 +100,9 @@ GolfVGG: VGG-like net w/ flatten layer
 - 代码：src4
 - 结果：可用
 - 计划：加入 guided grad-cam
+
+Creating Guided Grad-CAM
+------------------------
+- 时间：2021 年 12 月 13 日
+- 目的：加入 guided backpropagation
+- 代码：add-gbp 分支
