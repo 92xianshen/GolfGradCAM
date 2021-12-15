@@ -67,7 +67,7 @@ def interpolate(x, y, xnew):
     ynew = f(xnew)
     return ynew
 
-def grad_cam(input_model, swings, category_index, layer_name):
+def grad_cam_fn(input_model, swings, category_index, layer_name):
     modified_outputs = [input_model.get_layer(layer_name).output, input_model.output]
     modified_model = tf.keras.Model(inputs=input_model.input, outputs=modified_outputs)
 
@@ -127,7 +127,7 @@ for i in range(x_test.shape[0]):
 
     # ->> Gradient-weighted Class Activation Map
     predicted_class = predictions[0].argmax() # predictions: scalar
-    cam, heatmap = grad_cam(model, x, predicted_class, 'block5_conv4')
+    cam, heatmap = grad_cam_fn(model, x, predicted_class, 'block5_conv4')
 
     # ->> interpolation for heat line 
     heatmap_length = heatmap.shape[0]
@@ -137,8 +137,8 @@ for i in range(x_test.shape[0]):
 
     # ->> Guided Grad-CAM
     guided_model = modify_backprop(model)
-    saliency = saliency_function(x, guided_model, activation_layer='block5_conv4')
-    guided_gradcam = saliency[0].numpy() * heatmap_ext[..., np.newaxis]
+    saliencies = saliency_function(x, guided_model, activation_layer='block5_conv4')
+    guided_gradcam = saliencies[0].numpy() * heatmap_ext[..., np.newaxis]
 
     np.savez(
         os.path.join(save_root, '{}.npz'.format(i)), 
@@ -148,4 +148,4 @@ for i in range(x_test.shape[0]):
         swing=x[0], 
         heatmap_ext=heatmap_ext, 
         guided_gradcam=guided_gradcam, 
-        saliency=saliency[0])
+        saliency=saliencies[0])
