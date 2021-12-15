@@ -143,11 +143,11 @@ for name in incorrect_swings.keys():
     load_and_plot(name, save_fullname_prefix)
 
     # ->> load and plot predicted class
-    name_predicted = correct_swings[str(predicted_class)][0]
+    name_predicted = correct_swings[str(predicted_class)][0] # select the first swing as reference
     save_fullname_prefix_predicted = os.path.join(save_path, misclassified_swing_idx, os.path.splitext(name_predicted)[0])
     load_and_plot(name_predicted, save_fullname_prefix_predicted)
 
     # ->> load and plot actual class
-    name_actual = correct_swings[str(actual_class)][0]
+    name_actual = correct_swings[str(actual_class)][0] # select the first swing as reference
     save_fullname_prefix_actual = os.path.join(save_path, misclassified_swing_idx, os.path.splitext(name_actual)[0])
     load_and_plot(name_actual, save_fullname_prefix_actual)
