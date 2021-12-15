@@ -129,7 +129,7 @@ for i in range(x_test.shape[0]):
     predicted_class = predictions[0].argmax() # predictions: scalar
     cam, heatmap = grad_cam_fn(model, x, predicted_class, 'block5_conv4')
 
-    # ->> interpolation for heat line 
+    # ->> interpolation for heat map 
     heatmap_length = heatmap.shape[0]
     heatmap_coord = list(range(heatmap_length))
     swing_coord = np.linspace(0, heatmap_length - 1, swing_length)
