@@ -8,26 +8,16 @@ import tensorflow as tf
 from model.GolfVGG import create_convnet
 
 # Task
-task = ('All', '645')
+task = ('All', '645') # full time resolution
+# task = ('All', '600')
+# task = ('All', '550')
+# task = ('All', '500')
+# task = ('All', '450')
 
 # Create result folder
 result_path = 'saved_model/'
 if not os.path.exists(result_path):
     os.makedirs(result_path)
-
-# Create model
-model = create_convnet()
-model.compile(
-    optimizer='Adam', 
-    loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True), 
-    metrics=['accuracy'])
-
-# Read dataset
-x_train = np.load('../dataset/normalized/X_train_norm.npz')['arr_0']
-y_train = np.load('../dataset/normalized/y_train.npz')['arr_0']
-
-x_test = np.load('../dataset/normalized/X_test_norm.npz')['arr_0']
-y_test = np.load('../dataset/normalized/y_test.npz')['arr_0']
 
 # Sensor and length selections
 sensor_set = {
@@ -46,6 +36,20 @@ sample_set = {
 }
 
 sensor, sample = sensor_set[task[0]], sample_set[task[1]]
+
+# Create model
+model = create_convnet(input_shape=[sample[1] - sample[0], len(sensor)])
+model.compile(
+    optimizer='Adam', 
+    loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True), 
+    metrics=['accuracy'])
+
+# Read dataset
+x_train = np.load('../dataset/normalized/X_train_norm.npz')['arr_0']
+y_train = np.load('../dataset/normalized/y_train.npz')['arr_0']
+
+x_test = np.load('../dataset/normalized/X_test_norm.npz')['arr_0']
+y_test = np.load('../dataset/normalized/y_test.npz')['arr_0']
 
 # Training and test sets
 x_training, y_training = x_train[..., sample[0]:sample[1], sensor], y_train

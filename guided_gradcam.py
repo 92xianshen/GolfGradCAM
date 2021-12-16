@@ -4,12 +4,11 @@ import tensorflow as tf
 from scipy import interpolate as spinterp
 import matplotlib.pyplot as plt
 
-task = ('All', '645')
+task = ('All', '450') # 
 
-swing_no = 2
-nb_classes = 19
-SHAPE = [645, 8]
-swing_length = 645
+save_root = 'multi-time/{}'.format(task[1]) # save folder
+if not os.path.exists(save_root):
+    os.makedirs(save_root)
 
 # Sensor and length selections
 sensor_set = {
@@ -29,10 +28,9 @@ sample_set = {
 
 sensor, sample = sensor_set[task[0]], sample_set[task[1]]
 
-# Save folder
-save_root = 'cam/'
-if not os.path.exists(save_root):
-    os.makedirs(save_root)
+nb_classes = 19
+SHAPE = [sample[1] - sample[0], len(sensor)]
+swing_length = sample[1] - sample[0]
 
 def target_category_loss(x, category_index, nb_classes):
     return tf.multiply(x, tf.one_hot([category_index], nb_classes))

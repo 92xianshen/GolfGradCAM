@@ -2,7 +2,11 @@ import numpy as np
 import tensorflow as tf
 
 # Task
-task = ('All', '645')
+task = ('All', '645') # full time resolution
+# task = ('All', '600')
+# task = ('All', '550')
+# task = ('All', '500')
+# task = ('All', '450')
 
 x_test = np.load('../dataset/normalized/X_test_norm.npz')['arr_0']
 y_test = np.load('../dataset/normalized/y_test.npz')['arr_0']
