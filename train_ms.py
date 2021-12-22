@@ -1,6 +1,7 @@
 '''
 This code is for training a ConvNet on the normalized dataset
 GAP layer is not used
+Multi-sensor experiment
 '''
 import os
 import numpy as np
@@ -8,11 +9,10 @@ import tensorflow as tf
 from model.GolfVGG import create_convnet
 
 # Task
-task = ('All', '645') # full time resolution
-# task = ('All', '600')
-# task = ('All', '550')
-# task = ('All', '500')
-# task = ('All', '450')
+# task = ('All', '645') # all sensors engaged
+# task = ('SG', '645') # SG sensors engaged
+# task = ('Acc.', '645') # accelerometer engaged
+task = ('Gyro.', '645') # gyroscope engaged
 
 # Create result folder
 result_path = 'saved_model/'
@@ -39,8 +39,9 @@ sensor, sample = sensor_set[task[0]], sample_set[task[1]]
 
 # Create model
 model = create_convnet(input_shape=[sample[1] - sample[0], len(sensor)])
+optimizer = tf.keras.optimizers.Adam(learning_rate=0.0001)
 model.compile(
-    optimizer='Adam', 
+    optimizer=optimizer, 
     loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True), 
     metrics=['accuracy'])
 

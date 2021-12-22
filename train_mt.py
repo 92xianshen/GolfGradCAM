@@ -1,6 +1,6 @@
 '''
 This code is for training a ConvNet on the normalized dataset
-GAP layer is embedded
+GAP layer is not used
 '''
 import os
 import numpy as np
