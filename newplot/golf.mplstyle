@@ -1,0 +1,15 @@
+axes.spines.top: False
+axes.spines.right: False
+
+axes.grid: True
+grid.alpha: 1.
+grid.linestyle: --
+
+figure.constrained_layout.use: True
+
+lines.linewidth: 2.
+
+image.aspect: auto
+image.cmap: rainbow
+image.interpolation: nearest
+image.origin: lower
